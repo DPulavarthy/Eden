@@ -1,6 +1,6 @@
 // Import dependencies.
 import { Eden } from '#manager';
-import { CommandInteraction as Interaction } from 'discord.js';
+import { ChatInputCommandInteraction as Interaction } from 'discord.js';
 
 // Declare a Command interface that extends the Meta interface.
 export default interface Command extends Meta { }

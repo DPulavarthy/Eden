@@ -1,6 +1,6 @@
 // Import dependencies.
 import { Command } from '#manager';
-import { CommandInteraction as Interaction } from 'discord.js';
+import { ChatInputCommandInteraction as Interaction } from 'discord.js';
 
 // Ping command.
 export default class Ping extends Command {
@@ -48,7 +48,7 @@ export default class Ping extends Command {
     public async run(interaction: Interaction): Promise<void> {
         return new Promise(async (resolve, reject) => {
             const pingTime = Date.now();
-            await interaction.editReply(`Took \`${Date.now() - pingTime}ms\``);
+            await interaction.editReply(`Took \`${Date.now() - pingTime}ms\`. ${interaction.options.getString('message') ?? ''}`);
             resolve();
         })
     }
