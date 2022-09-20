@@ -47,6 +47,15 @@ export default class Eden extends Client {
 
         // Notify the console that the bot is ready.
         console.log(`Logged in as ${this.user?.tag}!`);
+
+        global.embed = {
+            color: 0xF04747,
+            timestamp: new Date().toISOString(),
+            footer: {
+                text: `Provided by ${this.user?.tag}`,
+                icon_url: this.user?.displayAvatarURL() || '',
+            },
+        }
     };
 
     /**
@@ -108,7 +117,15 @@ export default class Eden extends Client {
             const error = await new Promise(async (resolve, reject) => command.run(interaction, resolve, reject)).catch(error => error);
 
             // Check if there was an error.
-            if (error) await interaction.editReply(`An error occurred while executing the command \`${command.title}\`: \`${error}\``);
+            if (error) await interaction.editReply({
+                content: null,
+                embeds: [
+                    {
+                        ...embed,
+                        description: `An error occurred while executing the command [${command.title.toUpperCase()}]: ${error}`.codify(),
+                    }
+                ]
+            });
         }
     }
 }
