@@ -46,7 +46,23 @@ export default class Ping extends Command {
      * @returns {Promise<void>}
      */
     public async run(interaction: Interaction, resolve: Function, reject: Function): Promise<void> {
-        await interaction.editReply(`Took \`${Math.abs(Date.now() - (+interaction.createdAt))}ms\`. ${interaction.options.getString('message') ?? ''}`);
+        await interaction.editReply({
+            content: null,
+            embeds: [
+                {
+                    ...embed,
+                    description: [
+                        `Websocket Ping: ${client.ws.ping}ms`,
+                        `Message Ping: ${Math.abs(Date.now() - interaction.createdTimestamp)}ms`,
+                        `Message: ${interaction.options.getString('message') ?? 'No message provided.'}`,
+                    ].join('\n').codify(),
+                    author: {
+                        name: `Requested by ${interaction.user.tag}`,
+                        icon_url: interaction.user.displayAvatarURL(),
+                    },
+                }
+            ],
+        }).catch(error => reject(error));
         resolve();
     }
 }
