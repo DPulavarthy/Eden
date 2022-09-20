@@ -1,0 +1,25 @@
+{
+  "name": "eden",
+  "version": "1.0.0",
+  "description": "Your personal Discord assistant.",
+  "main": "lib/index.js",
+  "imports": {
+    "#manager": "./lib/util/manager.js"
+  },
+  "scripts": {
+    "prebuild": "node util/cleanup.mjs",
+    "build": "npx tsc",
+    "postbuild": "ECHO \u001b[32m[SYSTEM]: Build complete!\u001b[0m",
+    "prestart": "npm run build --silent",
+    "start": "node ."
+  },
+  "author": "Kurasad",
+  "license": "GNU",
+  "devDependencies": {
+    "typescript": "^4.8.3"
+  },
+  "dependencies": {
+    "discord.js": "^14.3.0",
+    "dotenv": "^16.0.2"
+  }
+}
