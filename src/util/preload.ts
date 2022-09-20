@@ -21,7 +21,7 @@ declare global {
         lines: number;
         ephemeral: boolean;
         options: ApplicationCommandOptionData[];
-        run(interaction: Interaction): Promise<void>;
+        run(interaction: Interaction, resolve: Function, reject: Function): Promise<void>;
     }
 
     interface Array<T> {

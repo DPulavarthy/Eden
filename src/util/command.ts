@@ -17,7 +17,7 @@ export default class Command implements Meta {
     }
 
     // Fallback command run handler.
-    public async run(interaction: Interaction) {
+    public async run(interaction: Interaction, resolve: Function, reject: Function) {
         interaction.reply('This was not supposed to happen!');
     }
 }

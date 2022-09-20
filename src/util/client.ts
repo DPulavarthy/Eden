@@ -65,21 +65,21 @@ export default class Eden extends Client {
 
             // Notify the user that the bot is building commands.
             const msg = await message.reply('Building Commands... Please Wait!');
-            
+
             // Build commands.
             let data: ChatInputApplicationCommandData[] = [];
             for (const command of client._commands.values()) {
                 data.push({
                     name: command.title,
                     description: command.about,
-                    options: command.options,
-                })
+                    options: command.options
+                });
             }
 
             // Set Commands.
             message.guild?.commands.set(data);
 
-           // Notify the user that the bot is done building commands. 
+            // Notify the user that the bot is done building commands. 
             msg.edit('Commands Built!');
         }
     }
@@ -97,7 +97,7 @@ export default class Eden extends Client {
 
         // Get the command.
         const command = client._commands.get(interaction.commandName) ?? { ephemeral: false, title: null };
-        
+
         // Defer reply as soon as possible.
         await interaction.deferReply({ ephemeral: command.ephemeral });
 
@@ -105,7 +105,7 @@ export default class Eden extends Client {
         if (command.title) {
 
             // Run the command.
-            const error = await command.run(interaction).catch(error => error);
+            const error = await new Promise(async (resolve, reject) => command.run(interaction, resolve, reject)).catch(error => error);
 
             // Check if there was an error.
             if (error) await interaction.editReply(`An error occurred while executing the command \`${command.title}\`: \`${error}\``);
