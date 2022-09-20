@@ -1,5 +1,4 @@
 // Import dependencies.
-import { Eden } from '#manager';
 import { ChatInputCommandInteraction as Interaction } from 'discord.js';
 
 // Declare a Command interface that extends the Meta interface.
@@ -12,8 +11,8 @@ export default class Command implements Meta {
     public static about = 'No description provided.';
 
     // Merge the command meta data.
-    public constructor(client: Eden, meta: Meta) {
-        this.mergify(client, meta);
+    public constructor(meta: Meta) {
+        this.mergify(meta);
     }
 
     // Fallback command run handler.

@@ -64,7 +64,7 @@ export default class Handler {
                 const command = await import(`../../${path}/${file}`);
 
                 // Set the command in cache.
-                client._commands.set(file.split('.')[0], new command.default(client, {
+                client._commands.set(file.split('.')[0], new command.default({
                     title: file.split('.')[0],
                     about: command.default.about ?? '',
                     group: path.slice(2),

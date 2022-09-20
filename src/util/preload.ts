@@ -9,12 +9,21 @@ declare global {
     // Declare a global client.
     var client: Eden;
 
+    // Default embed data.
+    var embed: {
+        color: number;
+        timestamp: string;
+        footer: {
+            text: string;
+            icon_url: string;
+        };
+    }
+
     // Globally access interaction options types.
     var Options: typeof ApplicationCommandOptionType;
 
     // Command file interface.
     interface Meta {
-        client: Eden;
         title: string;
         about: string;
         group: string;
@@ -49,6 +58,9 @@ declare global {
 
         // Parse 'this' into an object.
         parse: () => object;
+
+        // Convert 'this' to a Discord code block.
+        codify: (lang?: string) => string;
     }
 }
 
@@ -126,6 +138,10 @@ export default class Preload {
          */
         String.prototype.camelify = function (): string {
             return this.replace(/(?:^\w|[A-Z]|\b\w)/g, (word: string, index: number) => index === 0 ? word.toLowerCase() : word.toUpperCase()).replace(/\s+/g, '');
+        }
+
+        String.prototype.codify = function (lang?: string): string {
+            return `\`\`\`${lang ?? ''}\n${this}\n\`\`\``;
         }
 
         /**
