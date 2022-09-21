@@ -78,7 +78,7 @@ export default class Eden extends Client {
 
             // Notify the user that the bot is building commands.
             const msg = await message.reply({
-                content: null,
+                content: undefined,
                 embeds: [
                     {
                         ...embed,
