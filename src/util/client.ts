@@ -1,6 +1,6 @@
 // Import dependencies.
-import { Client, Collection, Interaction, Message, Options, User, ChatInputApplicationCommandData } from 'discord.js';
-import { Preload, Handler } from '#manager';
+import { Client, Collection, Interaction, Message, Options, User, ChatInputApplicationCommandData, ChatInputCommandInteraction } from 'discord.js';
+import { Preload, Handler, Cache } from '#manager';
 
 // Declare a custom global client interface.
 export default interface Eden extends Client {
@@ -31,6 +31,9 @@ export default class Eden extends Client {
         // Listen to the interactionCreate event.
         this.on('interactionCreate', this.interaction);
 
+        // Load cache manager.
+        Cache.load();
+
         // Load commands and login to the Discord API.
         Handler.load(this).then(() => this.login(process.env.TOKEN)).catch(error => { throw new Error(error) });
 
@@ -43,11 +46,12 @@ export default class Eden extends Client {
      * @memberof Eden
      * 
      */
-    private ready() {
+    private ready(): void {
 
         // Notify the console that the bot is ready.
         console.log(`Logged in as ${this.user?.tag}!`);
 
+        // Define a globally usable embed base.
         global.embed = {
             color: 0xF04747,
             timestamp: new Date().toISOString(),
@@ -64,7 +68,7 @@ export default class Eden extends Client {
      * @param {message} - A discord message object.
      * @returns {void}
      */
-    async message(message: Message) {
+    private async message(message: Message): Promise<void> {
 
         // Reject bots.
         if (message.author.bot) return;
@@ -73,7 +77,15 @@ export default class Eden extends Client {
         if (message.mentions.has(this.user as User)) {
 
             // Notify the user that the bot is building commands.
-            const msg = await message.reply('Building Commands... Please Wait!');
+            const msg = await message.reply({
+                content: null,
+                embeds: [
+                    {
+                        ...embed,
+                        description: 'Building commands... Please wait!'.codify(),
+                    }
+                ]
+            })
 
             // Build commands.
             let data: ChatInputApplicationCommandData[] = [];
@@ -82,14 +94,22 @@ export default class Eden extends Client {
                     name: command.title,
                     description: command.about,
                     options: command.options
-                });
+                })
             }
 
             // Set Commands.
-            message.guild?.commands.set(data);
+            const error = await message.guild?.commands.set(data).then(() => void 0).catch(error => error);
 
             // Notify the user that the bot is done building commands. 
-            msg.edit('Commands Built!');
+            msg.edit({
+                content: null,
+                embeds: [
+                    {
+                        ...embed,
+                        description: error ? `An error occurred while rebuilding the commands: ${error}`.codify() : 'Commands have been rebuilt successfully!'.codify(),
+                    }
+                ]
+            })
         }
     }
 
@@ -99,7 +119,7 @@ export default class Eden extends Client {
      * @param {message} - A discord interaction object.
      * @returns {void}
      */
-    async interaction(interaction: Interaction) {
+    private async interaction(interaction: Interaction): Promise<void> {
 
         // Check if the interaction is a command.
         if (!interaction.isCommand()) return;
@@ -114,7 +134,7 @@ export default class Eden extends Client {
         if (command.title) {
 
             // Run the command.
-            const error = await new Promise(async (resolve, reject) => command.run(interaction, resolve, reject)).catch(error => error);
+            const error = await new Promise(async (resolve, reject): Promise<unknown> => command.run(interaction as ChatInputCommandInteraction, resolve, reject)).catch(error => error);
 
             // Check if there was an error.
             if (error) await interaction.editReply({
@@ -125,7 +145,7 @@ export default class Eden extends Client {
                         description: `An error occurred while executing the command [${command.title.toUpperCase()}]: ${error}`.codify(),
                     }
                 ]
-            });
+            })
         }
     }
 }

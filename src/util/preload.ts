@@ -1,13 +1,19 @@
 // Import dependencies.
 import { config } from 'dotenv';
-import { Eden } from '#manager';
-import { ApplicationCommandOptionType, CommandInteraction as Interaction, ApplicationCommandOptionData } from 'discord.js';
+import { Eden, Command as Base } from '#manager';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, ApplicationCommandOptionData } from 'discord.js';
 
 
 declare global {
 
     // Declare a global client.
     var client: Eden;
+
+    // Declare a global command base.
+    var Command: typeof Base;
+
+    // Declare a global alias for interaction type.
+    interface Interaction extends ChatInputCommandInteraction { }
 
     // Default embed data.
     var embed: {
@@ -30,7 +36,7 @@ declare global {
         lines: number;
         ephemeral: boolean;
         options: ApplicationCommandOptionData[];
-        run(interaction: Interaction, resolve: Function, reject: Function): Promise<void>;
+        run(interaction: ChatInputCommandInteraction, resolve: Function, reject: Function): Promise<unknown>;
     }
 
     interface Array<T> {
@@ -61,6 +67,12 @@ declare global {
 
         // Convert 'this' to a Discord code block.
         codify: (lang?: string) => string;
+    }
+
+    interface Number {
+
+        // Convert 'this' as MS time to readable time.
+        timify: (short?: boolean) => string;
     }
 }
 
@@ -140,6 +152,14 @@ export default class Preload {
             return this.replace(/(?:^\w|[A-Z]|\b\w)/g, (word: string, index: number) => index === 0 ? word.toLowerCase() : word.toUpperCase()).replace(/\s+/g, '');
         }
 
+        /**
+         * Convert 'this' to a Discord code block.
+         * 
+         * @return string
+         * @example
+         * 'hello world'.codify(): '```\nhello world\n```';
+         * 'hello world'.codify('js'): '```js\nhello world\n```';
+         */
         String.prototype.codify = function (lang?: string): string {
             return `\`\`\`${lang ?? ''}\n${this}\n\`\`\``;
         }
@@ -151,7 +171,7 @@ export default class Preload {
          * 
          * @example
          * '-hello world'.parse(): { hello: 'world' };
-         * '-ts --query 17.3'.parse(): { ts: 'true', query: 17.3 };
+         * '-ts --query 17.3'.parse(): { ts: true, query: 17.3 };
          */
         String.prototype.parse = function (): object {
             const args: { [key: string]: string | boolean | number } = {};
@@ -165,8 +185,37 @@ export default class Preload {
             return args;
         };
 
-        // Delcare interaction options globally.
-        global.Options = ApplicationCommandOptionType;
+        /**
+         * Convert 'this' as MS time to readable time.
+         * 
+         * @return string
+         *
+         * @example
+         * 1000.timify(): '1 second';
+         * 1000.timify(true): '1sec'; 
+         * (1000 * 60 * 60 * 2).timify(true): '2hrs';
+         * ((1000 * 60 * 60 * 2) + 3000).timify(): '2 hours and 3 seconds';
+         */
+        Number.prototype.timify = function (short?: boolean): string {
+            let sec: number = +((this as number) / 1000).toFixed(0);
+            let min: number = Math.floor(sec / 60);
+            let hrs: number = min > 59 ? Math.floor(min / 60) : 0;
+            min -= hrs * 60;
+            sec = Math.floor(sec % 60);
+
+            const result: string[] = [];
+            hrs ? result.push(`${hrs.toLocaleString()} ${short ? 'hr' : 'hour'}${hrs === 1 ? '' : 's'}`) : void 0;
+            min ? result.push(`${min} ${short ? 'min' : 'minute'}${min === 1 ? '' : 's'}`) : void 0;
+            sec ? result.push(`${(min || hrs) ? 'and ' : ''} ${sec} ${short ? 'sec' : 'second'}${sec === 1 ? '' : 's'}`.trim()) : void 0;
+
+            return short ? (result[0] ?? '0 secs') : (result.exists() ? result.join(' ') : '0 seconds');
+        };
+
+        // Globally expose useful command aliases.
+        global.mergify({
+            Options: ApplicationCommandOptionType,
+            Command: Base
+        });
     }
 
     /**

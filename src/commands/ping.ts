@@ -1,8 +1,3 @@
-// Import dependencies.
-import { Command } from '#manager';
-import { ChatInputCommandInteraction as Interaction } from 'discord.js';
-
-// Ping command.
 export default class Ping extends Command {
 
     /**
@@ -10,7 +5,7 @@ export default class Ping extends Command {
      * 
      * @returns {string}
      */
-    public static get about() {
+    public static get about(): string {
         return 'Pings the bot.';
     }
 
@@ -19,7 +14,7 @@ export default class Ping extends Command {
      * 
      * @returns {boolean}
      */
-    public static get ephemeral() {
+    public static get ephemeral(): boolean {
         return false;
     }
 
@@ -28,15 +23,8 @@ export default class Ping extends Command {
      * 
      * @returns {ChatInputApplicationCommandData[]}
      */
-    public static get options() {
-        return [
-            {
-                name: 'message',
-                description: 'A message for the bot to send back to you!',
-                type: Options.String,
-                required: false,
-            }
-        ];
+    public static get options(): object[] {
+        return [];
     }
 
     /**
@@ -46,6 +34,8 @@ export default class Ping extends Command {
      * @returns {Promise<void>}
      */
     public async run(interaction: Interaction, resolve: Function, reject: Function): Promise<void> {
+
+        // Reply with embed.
         await interaction.editReply({
             content: null,
             embeds: [
@@ -54,7 +44,6 @@ export default class Ping extends Command {
                     description: [
                         `Websocket Ping: ${client.ws.ping}ms`,
                         `Message Ping: ${Math.abs(Date.now() - interaction.createdTimestamp)}ms`,
-                        `Message: ${interaction.options.getString('message') ?? 'No message provided.'}`,
                     ].join('\n').codify(),
                     author: {
                         name: `Requested by ${interaction.user.tag}`,
