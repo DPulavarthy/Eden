@@ -173,7 +173,7 @@ export default class Cache {
          * 
          * @returns {typeof Cache.CacheItem[] as object[]} An array of image cache items.
          */
-        list: (filterby: string | undefined): typeof Cache.CacheItem[] => Cache.storage.imgs.filter((set: { key: string }) => filterby ? set.key.includes(filterby) : true),
+        list: (filterby: string | undefined): typeof Cache.CacheItem[] => Cache.storage.imgs.filter((set: { key: string }) => filterby ? set.key.startsWith(filterby) : true),
     }
 
     // Tags cache manager.
@@ -287,7 +287,7 @@ export default class Cache {
          * @param {string | undefined} filterby Filter the tags by a string.
          * @returns {typeof Cache.CacheItem[] as object[]} An array of tag cache items.
          */
-        list: (filterby: string | undefined): typeof Cache.CacheItem[] => Cache.storage.tags.filter((set: { key: string }) => filterby ? set.key.includes(filterby) : true),
+        list: (filterby: string | undefined): typeof Cache.CacheItem[] => Cache.storage.tags.filter((set: { key: string }) => filterby ? set.key.startsWith(filterby) : true),
     }
 
     /** 
