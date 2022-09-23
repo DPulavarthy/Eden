@@ -9,7 +9,6 @@
   "scripts": {
     "prebuild": "node util/cleanup.mjs",
     "build": "npx tsc",
-    "postbuild": "ECHO \u001b[32m[SYSTEM]: Build complete!\u001b[0m",
     "prestart": "npm run build --silent",
     "start": "node ."
   },

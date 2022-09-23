@@ -1,0 +1,11 @@
+version: "3.7"
+
+services:
+
+  web:
+    container_name: eden
+    image: eden
+    restart: always
+    network_mode: bridge
+    volumes:
+      - C:/Users/Seele/Documents/Eden:/home/eden
