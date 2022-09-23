@@ -55,7 +55,9 @@ export default class Img extends Command {
                     { name: 'newname', description: 'The new name of the image tag.', type: Options.String, required: false },
                 ]
             },
-            { name: 'list', description: 'List all image tags.', type: Options.Subcommand, options: [] },
+            { name: 'list', description: 'List all image tags.', type: Options.Subcommand, options: [
+                { name: 'filterby', description: 'A text to filter results by.', type: Options.String, required: false },
+            ] },
             {
                 name: 'purge', description: 'Delete all image tags in the trash.', type: Options.Subcommand,
                 options: [
@@ -98,7 +100,7 @@ export default class Img extends Command {
                 const image = interaction.options.getAttachment('image', true);
 
                 // Run the action.
-                result = await Cache.images.create(name, image.url, interaction.user).catch(error => error);
+                result = await Cache.images.create(name.toLowerCase(), image.url, interaction.user).catch(error => error);
 
                 // Post the result.
                 message = result as string ?? 'Image successfully created. Your action has been logged.';
@@ -115,7 +117,7 @@ export default class Img extends Command {
                 if (verify) {
 
                     // Run the action.
-                    result = await Cache.images.delete(interaction.options.getString('name', true), interaction.user).catch(error => error);
+                    result = await Cache.images.delete(interaction.options.getString('name', true).toLowerCase(), interaction.user).catch(error => error);
 
                     // Post the result.
                     message = result as string ?? 'Image successfully deleted. Your action has been logged.';
@@ -129,7 +131,7 @@ export default class Img extends Command {
             case 'fetch': {
 
                 // Run the action.
-                const img: object | undefined = await Cache.images.fetch(interaction.options.getString('name'));
+                const img: object | undefined = await Cache.images.fetch(interaction.options.getString('name')?.toLowerCase() ?? null);
 
                 // Post the result.
                 message = img ? `${(img as { key: string }).key}.png [Last accessed ${(Date.now() - (img as { accessed: number }).accessed).timify(true)}]` : 'Tag does not exist.';
@@ -149,7 +151,7 @@ export default class Img extends Command {
                 const newname = interaction.options.getString('newname') ?? null;
 
                 // Run the action.
-                result = await Cache.images.update(name, newname, image.url, interaction.user).catch(error => error);
+                result = await Cache.images.update(name.toLowerCase(), newname, image.url, interaction.user).catch(error => error);
 
                 // Post the result.
                 message = result as string ?? 'Image successfully updated. Your action has been logged.';
@@ -159,8 +161,11 @@ export default class Img extends Command {
             // List all images.
             case 'list': {
 
+                // Get the action parameters.
+                const filterby = interaction.options.getString('filterby') ?? null;
+
                 // Run the action.
-                const imgs = Cache.images.list();
+                const imgs = Cache.images.list(filterby?.toLowerCase());
 
                 // Post the result.
                 message = imgs.exists() ? imgs.map(set => `${set.key}.png [Last accessed ${(Date.now() - set.accessed).timify(true)} ago]`).join('\n') : 'No images found.';

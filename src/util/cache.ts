@@ -102,7 +102,7 @@ export default class Cache {
                     Cache.download(value, `./cache/storage/images/${(set as { value: string }).value}.png`);
 
                     // Push and store in cache.
-                    Cache.storage.imgs = [...(Cache.storage.imgs.filter((set: { key: string }) => set.key !== newKey ?? oldKey) || {}), set as never];
+                    Cache.storage.imgs = [...(Cache.storage.imgs.filter((set: { key: string }) => set.key !== oldKey) || {}), set as never];
                     Cache.update(resolve);
                 } else reject('No image found with that key.');
             } catch (error) { reject(error); };
@@ -173,7 +173,7 @@ export default class Cache {
          * 
          * @returns {typeof Cache.CacheItem[] as object[]} An array of image cache items.
          */
-        list: (): typeof Cache.CacheItem[] => Cache.storage.imgs,
+        list: (filterby: string | undefined): typeof Cache.CacheItem[] => Cache.storage.imgs.filter((set: { key: string }) => filterby ? set.key.includes(filterby) : true),
     }
 
     // Tags cache manager.
@@ -187,14 +187,14 @@ export default class Cache {
          * @param {User} user The user who requested the tag creation.
          * @returns {Promise<unknown>} A promise that resolves when the tag is created.
          */
-        create: (key: string, value: string, user: User): Promise<unknown> => new Promise(async (resolve, reject) => {
+        create: (key: string, value: string, url: string, user: User): Promise<unknown> => new Promise(async (resolve, reject) => {
             try {
 
                 // Check if tag already exists.
                 if (Cache.storage.tags.find((set: { key: string }) => set.key === key)) return reject('Tag already exists');
 
                 // Push and store in cache.
-                Cache.storage.tags.push({ key, value, user: user.id, accessed: Date.now() } as never);
+                Cache.storage.tags.push({ key, value, url, user: user.id, accessed: Date.now() } as never);
                 Cache.update(resolve);
             } catch (error) { reject(error); };
         }),
@@ -208,9 +208,9 @@ export default class Cache {
          * @param {User} user The user who requested the tag update.
          * @returns {Promise<unknown>} A promise that resolves when the tag is updated.
          */
-        update: (oldKey: string, newKey: string | null, newValue: string, user: User): Promise<unknown> => new Promise(async (resolve, reject) => {
+        update: (oldKey: string, newKey: string | null, newValue: string | null, newUrl: string | null, user: User): Promise<unknown> => new Promise(async (resolve, reject) => {
             try {
-                const set: object | undefined = Cache.storage.tags.find((set: { key: string }) => set.key === oldKey);
+                const set: object | undefined = JSON.parse(JSON.stringify(Cache.storage.tags.find((set: { key: string }) => set.key === oldKey)));
                 const dupe: object | undefined = Cache.storage.tags.find((set: { key: string }) => set.key === newKey);
 
                 // Check if tag exists under 'newKey'.
@@ -220,10 +220,10 @@ export default class Cache {
                 else if (set) {
 
                     // Merge new values.
-                    (set as object).mergify({ key: newKey ?? oldKey, value: newValue, user: user.id, accessed: Date.now() });
+                    set.mergify({ key: newKey ?? oldKey, value: newValue ?? (set as { value: string }).value, url: newUrl === '.' ? '' : newUrl ?? (set as { url: string }).url, user: user.id, accessed: Date.now() });
 
                     // Push and store in cache.
-                    Cache.storage.tags = [...Cache.storage.tags.filter((set: { key: string }) => set.key !== newKey ?? oldKey), set as never];
+                    Cache.storage.tags = [...Cache.storage.tags.filter((set: { key: string }) => set.key !== oldKey), set as never];
                     Cache.update(resolve);
                 } else reject('No tag found with that key.');
             } catch (error) { reject(error); };
@@ -245,7 +245,7 @@ export default class Cache {
 
                     // Move image to deleted directory instead of deleting forever.
                     Cache.deleted.tags.push((set as object).mergify({ user: user.id, accessed: Date.now() }) as never);
-                    
+
                     // Push and store in cache.
                     Cache.storage.tags = Cache.storage.tags.filter((set: { key: string }) => set.key !== key);
                     Cache.update(resolve);
@@ -284,9 +284,10 @@ export default class Cache {
         /**
          * Get all tags from the cache.
          * 
+         * @param {string | undefined} filterby Filter the tags by a string.
          * @returns {typeof Cache.CacheItem[] as object[]} An array of tag cache items.
          */
-        list: (): typeof Cache.CacheItem[] => Cache.storage.tags,
+        list: (filterby: string | undefined): typeof Cache.CacheItem[] => Cache.storage.tags.filter((set: { key: string }) => filterby ? set.key.includes(filterby) : true),
     }
 
     /** 

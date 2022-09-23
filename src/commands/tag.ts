@@ -32,6 +32,7 @@ export default class Tag extends Command {
                 options: [
                     { name: 'name', description: 'The name of the text tag.', type: Options.String, required: true },
                     { name: 'content', description: 'The content of the text tag.', type: Options.String, required: true },
+                    { name: 'url', description: 'The url of the text tag.', type: Options.String, required: false },
                 ]
             },
             {
@@ -50,11 +51,16 @@ export default class Tag extends Command {
             {
                 name: 'update', description: 'Update a text tag.', type: Options.Subcommand, options: [
                     { name: 'name', description: 'The current name of the text tag.', type: Options.String, required: true },
-                    { name: 'content', description: 'The new content of the text tag.', type: Options.String, required: true },
+                    { name: 'content', description: 'The new content of the text tag.', type: Options.String, required: false },
                     { name: 'newname', description: 'The new name of the text tag.', type: Options.String, required: false },
+                    { name: 'url', description: 'The new url of the text tag.', type: Options.String, required: false },
                 ]
             },
-            { name: 'list', description: 'List all text tags.', type: Options.Subcommand, options: [] },
+            {
+                name: 'list', description: 'List all text tags.', type: Options.Subcommand, options: [
+                    { name: 'filterby', description: 'A text to filter results by.', type: Options.String, required: false },
+                ]
+            },
             {
                 name: 'purge', description: 'Delete all text tags in the trash.', type: Options.Subcommand,
                 options: [
@@ -81,6 +87,7 @@ export default class Tag extends Command {
         let fetch = {
             tag: '',
             accessed: 0,
+            url: '',
         };
 
         switch (command) {
@@ -91,9 +98,10 @@ export default class Tag extends Command {
                 // Get the action parameters.
                 const name = interaction.options.getString('name', true);
                 const content = interaction.options.getString('content', true);
+                const url = interaction.options.getString('url', false);
 
                 // Run the action.
-                result = await Cache.tags.create(name, content, interaction.user).catch(error => error);
+                result = await Cache.tags.create(name?.toLowerCase(), content, url ?? '', interaction.user).catch(error => error);
 
                 // Post the result.
                 message = result as string ?? 'Tag successfully created. Your action has been logged.';
@@ -110,7 +118,7 @@ export default class Tag extends Command {
                 if (verify) {
 
                     // Run the action.
-                    result = await Cache.tags.delete(interaction.options.getString('name', true), interaction.user).catch(error => error);
+                    result = await Cache.tags.delete(interaction.options.getString('name', true)?.toLowerCase(), interaction.user).catch(error => error);
 
                     // Post the result.
                     message = result as string ?? 'Tag successfully deleted. Your action has been logged.';
@@ -124,12 +132,13 @@ export default class Tag extends Command {
             case 'fetch': {
 
                 // Run the action.
-                const tag: object | undefined = await Cache.tags.fetch(interaction.options.getString('name'));
+                const tag: object | undefined = await Cache.tags.fetch(interaction.options.getString('name')?.toLowerCase() ?? null);
 
                 // Post the result.
                 message = tag ? `${(tag as { key: string }).key}: ${(tag as { value: string }).value} [Last accessed ${(Date.now() - (tag as { accessed: number }).accessed).timify(true)}]` : 'Tag does not exist.';
                 fetch.accessed = tag ? (tag as { accessed: number }).accessed : 0;
                 fetch.tag = tag ? client.users.cache.get((tag as { user: string }).user)?.tag ?? '' : '';
+                fetch.url = tag ? (tag as { url: string }).url : '';
                 break;
             }
 
@@ -137,12 +146,13 @@ export default class Tag extends Command {
             case 'update': {
 
                 // Get the action parameters.
-                const name = interaction.options.getString('name', true);
-                const content = interaction.options.getString('content', true);
+                const name = interaction.options.getString('name', true).toLowerCase();
+                const content = interaction.options.getString('content');
                 const newname = interaction.options.getString('newname') ?? null;
+                const url = interaction.options.getString('url');
 
                 // Run the action.
-                result = await Cache.tags.update(name, newname, content, interaction.user).catch(error => error);
+                result = await Cache.tags.update(name, newname, content, url, interaction.user).catch(error => error);
 
                 // Post the result.
                 message = result as string ?? 'Tag successfully updated. Your action has been logged.';
@@ -152,11 +162,14 @@ export default class Tag extends Command {
             // List all tags.
             case 'list': {
 
+                // Get the action parameters.
+                const filterby = interaction.options.getString('filterby') ?? null;
+
                 // Run the action.
-                const tags = Cache.tags.list();
+                const tags = Cache.tags.list(filterby?.toLowerCase());
 
                 // Post the result.
-                message = tags.exists() ? tags.map(set => `${set.key}: ${set.value} [Last accessed ${(Date.now() - set.accessed).timify(true)} ago]`).join('\n') : 'No tags found.';
+                message = tags.exists() ? tags.map(set => `${set.key} [Last accessed ${(Date.now() - set.accessed).timify(true)} ago]`).join('\n') : 'No tags found.';
                 break;
             }
 
@@ -185,6 +198,8 @@ export default class Tag extends Command {
         interaction.editReply({
             content: null, embeds: [{
                 ...embed,
+                title: command === 'fetch' ? fetch.url : undefined,
+                url: command === 'fetch' ? fetch.url : undefined,
                 description: (message || 'Action Completed!').codify(),
                 timestamp: new Date(command === 'fetch' ? fetch.accessed : Date.now()).toISOString(),
                 footer: {
