@@ -137,7 +137,7 @@ export default class Img extends Command {
                 message = img ? `${(img as { key: string }).key}.png [Last accessed ${(Date.now() - (img as { accessed: number }).accessed).timify(true)}]` : 'Tag does not exist.';
                 fetch.accessed = img ? (img as { accessed: number }).accessed : 0;
                 fetch.tag = img ? client.users.cache.get((img as { user: string }).user)?.tag ?? '' : '';
-                fetch.attachment.path = join(__dirname, '../../', (img as { value: string }).value.slice(2));
+                fetch.attachment.path = img ? join(__dirname, '../../', (img as { value: string }).value.slice(2)) : '';
                 fetch.attachment.name = `${(img as { key: string }).key}.png`;
                 break;
             }
