@@ -143,6 +143,8 @@ export default class Cache {
             // Get the image from cache.
             const set = key ? Cache.storage.imgs.find((set: { key: string }) => set.key === key) as object : void 0;
 
+            if (!set) return void 0;
+
             // Modify the value so that it is a path to the image.
             return { ...set, value: `./cache/storage/images/${(set as { value: string }).value}.png` };
         },
