@@ -55,9 +55,11 @@ export default class Img extends Command {
                     { name: 'newname', description: 'The new name of the image tag.', type: Options.String, required: false },
                 ]
             },
-            { name: 'list', description: 'List all image tags.', type: Options.Subcommand, options: [
-                { name: 'filterby', description: 'A text to filter results by.', type: Options.String, required: false },
-            ] },
+            {
+                name: 'list', description: 'List all image tags.', type: Options.Subcommand, options: [
+                    { name: 'filterby', description: 'A text to filter results by.', type: Options.String, required: false },
+                ]
+            },
             {
                 name: 'purge', description: 'Delete all image tags in the trash.', type: Options.Subcommand,
                 options: [
@@ -198,14 +200,14 @@ export default class Img extends Command {
             content: null, embeds: [{
                 ...embed,
                 description: (message || 'Action Completed!').codify(),
-                timestamp: new Date(command === 'fetch' ? fetch.accessed : Date.now()).toISOString(),
-                image: command === 'fetch' ? { url: `attachment://${fetch.attachment.name}` } : undefined,
+                timestamp: new Date(command === 'fetch' && fetch.attachment.name ? fetch.accessed : Date.now()).toISOString(),
+                image: command === 'fetch' && fetch.attachment.name ? { url: `attachment://${fetch.attachment.name}` } : undefined,
                 footer: {
-                    text: command === 'fetch' ? `Last modified by ${fetch.tag}` : embed.footer.text,
-                    icon_url: command === 'fetch' ? interaction.user.displayAvatarURL() : embed.footer.icon_url,
+                    text: command === 'fetch' && fetch.attachment.name ? `Last modified by ${fetch.tag}` : embed.footer.text,
+                    icon_url: command === 'fetch' && fetch.attachment.name ? interaction.user.displayAvatarURL() : embed.footer.icon_url,
                 },
             }],
-            files: command === 'fetch' ? [{
+            files: command === 'fetch' && fetch.attachment.name ? [{
                 attachment: fetch.attachment.path,
                 name: fetch.attachment.name,
             }] : [],
